@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>3D FPS Game</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+      let camera, controls, scene, renderer;
+      let moveForward = false;
+      let moveBackward = false;
+      let moveLeft = false;
+      let moveRight = false;
+      let canJump = true;
+
+      const cubes = []; // Массив для хранения кубов
+
+      // Конфигурация кубов (легко менять параметры)
+      const CUBE_CONFIG = [
+        {
+          position: { x: 5, y: 0, z: 0 }, // Позиция куба
+          label: "Корабль 1", // Надпись
+          modelPath: "./Аврора.glb", // Путь к модели
+          modelScale: 4, // Масштаб модели
+        },
+        {
+          position: { x: -5, y: 0, z: 10 },
+          label: "Корабль 2",
+          modelPath: "./Ленин.glb",
+          modelScale: 4,
+        },
+        {
+          position: { x: -10, y: 0, z: 20 },
+          label: "Корабль 2",
+          modelPath: "./ПетрВеликий.glb",
+          modelScale: 4,
+        },
+        {
+          position: { x: -15, y: 0, z: 30 },
+          label: "Корабль 2",
+          modelPath: "./Елизавета.glb",
+          modelScale: 4,
+        },
+        {
+          position: { x: -20, y: 0, z: 40 },
+          label: "Корабль 2",
+          modelPath: "./Предестинация.glb",
+          modelScale: 4,
+        },
+        {
+          position: { x: -25, y: 0, z: 50 },
+          label: "Корабль 2",
+          modelPath: "./Фредерик.glb",
+          modelScale: 4,
+        },
+        // Добавьте свои кубы здесь
+      ];
+
+      init();
+      animate();
+
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0xffffff); // <-- Вот эта строка меняет фон
+        document.body.appendChild(renderer.domElement);
+
+        // Освещение
+        const light = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(light);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(0, 10, 0);
+        scene.add(directionalLight);
+
+        // Управление
+        controls = new THREE.PointerLockControls(camera, document.body);
+        scene.add(controls.getObject());
+
+        // Создание тропы
+        createPath();
+
+        // Создание кубов
+        createCubes();
+
+        // Обработчики событий
+        document.addEventListener("click", () => {
+          controls.lock();
+        });
+
+        const onKeyDown = (event) => {
+          switch (event.code) {
+            case "ArrowUp":
+            case "KeyW":
+              moveBackward = true;
+              break;
+            case "ArrowDown":
+            case "KeyS":
+              moveForward = true;
+              break;
+            case "ArrowLeft":
+            case "KeyA":
+              moveRight = true;
+              break;
+            case "ArrowRight":
+            case "KeyD":
+              moveLeft = true;
+              break;
+          }
+        };
+
+        const onKeyUp = (event) => {
+          switch (event.code) {
+            case "ArrowUp":
+            case "KeyW":
+              moveBackward = false;
+              break;
+            case "ArrowDown":
+            case "KeyS":
+              moveForward = false;
+              break;
+            case "ArrowLeft":
+            case "KeyA":
+              moveRight = false;
+              break;
+            case "ArrowRight":
+            case "KeyD":
+              moveLeft = false;
+              break;
+          }
+        };
+
+        document.addEventListener("keydown", onKeyDown);
+        document.addEventListener("keyup", onKeyUp);
+      }
+
+      function createPath() {
+        const pathGeometry = new THREE.PlaneGeometry(100, 2);
+        const pathMaterial = new THREE.MeshPhongMaterial({ color: 0x228b22 });
+        const path = new THREE.Mesh(pathGeometry, pathMaterial);
+        path.rotation.x = -Math.PI / 2;
+        scene.add(path);
+      }
+
+      function createCubes() {
+        const loader = new THREE.GLTFLoader();
+
+        CUBE_CONFIG.forEach((config) => {
+          // Создаем куб
+          const geometry = new THREE.BoxGeometry(1, 1, 1);
+          const material = new THREE.MeshPhongMaterial({ color: 0x808080 });
+          const cube = new THREE.Mesh(geometry, material);
+
+          cube.position.set(
+            config.position.x,
+            config.position.y,
+            config.position.z
+          );
+          scene.add(cube);
+          cubes.push(cube);
+
+          // Добавляем текст
+          const textGeometry = new THREE.TextGeometry(config.label, {
+            size: 1,
+            height: 1,
+          });
+          const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+          const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+          textMesh.position.set(0, 1.5, 0);
+          cube.add(textMesh);
+
+          // Загружаем модель корабля
+          loader.load(config.modelPath, (gltf) => {
+            const ship = gltf.scene;
+            ship.scale.set(
+              config.modelScale,
+              config.modelScale,
+              config.modelScale
+            );
+            if (
+              ["./Елизавета.glb", "./Фредерик.glb"].includes(config.modelPath)
+            ) {
+              ship.position.set(0, 3, 0);
+            } else if ("./Предестинация.glb" == config.modelPath) {
+              ship.position.set(0, 4, 0);
+            } else {
+              ship.position.set(0, 0, 0);
+            }
+            cube.add(ship);
+          });
+        });
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Движение персонажа
+        const delta = 0.05;
+        const direction = new THREE.Vector3();
+
+        if (moveForward) direction.z -= 1;
+        if (moveBackward) direction.z += 1;
+        if (moveLeft) direction.x -= 1;
+        if (moveRight) direction.x += 1;
+
+        direction.normalize();
+        controls.moveRight(-direction.x * delta);
+        controls.moveForward(direction.z * delta);
+
+        renderer.render(scene, camera);
+      }
+
+      // Обработка изменения размера окна
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
