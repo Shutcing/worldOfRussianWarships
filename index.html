@@ -202,7 +202,7 @@
   function createGround() {
     // Текстура пива
     const textureLoader = new THREE.TextureLoader();
-    const grassTexture = textureLoader.load('https://avatars.mds.yandex.net/i?id=57f94bcd4c7d887bacbfe2800a18cf47_l-8219140-images-thumbs&n=13');
+    const grassTexture = textureLoader.load('./beer.avif');
     grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
     grassTexture.repeat.set(10, 10);
 
